@@ -6,8 +6,8 @@ fn main() {
     let mut solution2 = 0;
 
     // read the input
-    let puzzle_input =
-        fs::read_to_string("./day2/input.txt").expect("Should have been able to read the file");
+    let puzzle_input = fs::read_to_string("./inputs/day2-input.txt")
+        .expect("Should have been able to read the file");
 
     // split input into lines
     let reports = puzzle_input.split("\n");
