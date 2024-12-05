@@ -4,3 +4,5 @@ main
 # Added by cargo
 
 /target
+inputs/*
+
