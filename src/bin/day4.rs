@@ -3,6 +3,7 @@ use std::fs;
 fn main() {
     // setup solution output
     let mut solution1 = 0;
+    let mut solution2 = 0;
 
     // read the input
     let puzzle_input = fs::read_to_string("./inputs/day4-input.txt")
@@ -23,80 +24,99 @@ fn main() {
     // loop through the rows and columns
     // start the search as each X and check each direction for 'XMAS'
     let mut row_index = 0;
-    let mut col_index = 0;
     while row_index < chars.len() {
+        let mut col_index = 0;
         while col_index < chars[row_index].len() {
             // get the current character
             let current_char: char = chars[row_index][col_index];
             if current_char == 'X' {
-                solution1 += xmas_search(&chars, row_index, col_index, current_char);
+                solution1 += xmas_search(
+                    &chars,
+                    row_index.try_into().unwrap(),
+                    col_index.try_into().unwrap(),
+                );
+            }
+            if current_char == 'A' {
+                solution2 += x_mas_search(
+                    &chars,
+                    row_index.try_into().unwrap(),
+                    col_index.try_into().unwrap(),
+                )
             }
             col_index += 1;
         }
         row_index += 1;
     }
 
-    println!("Solution 1: {:?}", solution1)
+    println!("Solution 1: {:?}", solution1);
+    println!("Solution 2: {:?}", solution2);
 }
 
-fn xmas_search(
-    chars: &Vec<Vec<char>>,
-    mut row_index: usize,
-    mut col_index: usize,
-    mut char_to_check: char,
-) -> i32 {
-    // in bounds check
-    if (row_index as u32) <= 0
-        || (col_index as u32) <= 0
-        || row_index >= chars.len()
-        || col_index >= chars.len()
-    {
-        return 0;
-    }
+fn xmas_search(chars: &Vec<Vec<char>>, row_index: i32, col_index: i32) -> i32 {
+    let mut total_found = 0;
 
-    // base case - we're looking for S, return 1 if we find it
-    if char_to_check == 'S' {
-        if chars[row_index][col_index] == char_to_check {
-            println!("Found XMAS!");
-            return 1;
-        } else {
-            return 0;
+    let offsets = vec![
+        (0, 1),
+        (1, 0),
+        (0, -1),
+        (-1, 0),
+        (1, 1),
+        (1, -1),
+        (-1, 1),
+        (-1, -1),
+    ];
+
+    for offset in offsets {
+        let mut other_chars: [char; 3] = [' ', ' ', ' '];
+        let mut row_offset = row_index;
+        let mut col_offset = col_index;
+
+        for attempt in 0..3 {
+            row_offset += offset.0;
+            col_offset += offset.1;
+
+            if row_offset >= 0
+                && row_offset < chars.len().try_into().unwrap()
+                && col_offset >= 0
+                && col_offset < chars[row_offset as usize].len().try_into().unwrap()
+            {
+                other_chars[attempt as usize] = chars[row_offset as usize][col_offset as usize];
+            }
+        }
+        if other_chars == ['M', 'A', 'S'] {
+            total_found += 1;
         }
     }
 
-    // figure out next char
-    match char_to_check {
-        'X' => char_to_check = 'M',
-        'M' => char_to_check = 'A',
-        'A' => char_to_check = 'S',
-        _ => char_to_check = 'S',
-    }
+    return total_found;
+}
 
-    let mut total = 0;
-    let possible_actions = ["neg", "pos", "nil"];
-    for row_action in possible_actions {
-        for col_action in possible_actions {
-            // handle Rust getting mad if these go negative
-            if (row_index == 0 && row_action == "neg") || (col_index == 0 && col_action == "neg") {
-                continue;
-            }
-            // decide what to do for each action
-            match row_action {
-                "pos" => row_index += 1,
-                "neg" => row_index -= 1,
-                "nil" => row_index = row_index,
-                _ => row_index = row_index,
-            }
-            match col_action {
-                "pos" => col_index += 1,
-                "neg" => col_index -= 1,
-                "nil" => col_index = col_index,
-                _ => col_index = col_index,
-            }
+fn x_mas_search(chars: &Vec<Vec<char>>, row_index: i32, col_index: i32) -> i32 {
+    let mut total_found = 0;
 
-            total += xmas_search(chars, row_index, col_index, char_to_check);
+    let offsets = vec![(-1, 1), (1, -1), (-1, -1), (1, 1)];
+    let mut other_chars: [i32; 4] = [-2, -2, -2, -2];
+
+    for (index, offset) in offsets.iter().enumerate() {
+        let row_offset = row_index + offset.0;
+        let col_offset = col_index + offset.1;
+
+        if row_offset >= 0
+            && row_offset < chars.len().try_into().unwrap()
+            && col_offset >= 0
+            && col_offset < chars[row_offset as usize].len().try_into().unwrap()
+        {
+            let current_char = chars[row_offset as usize][col_offset as usize];
+            if current_char == 'M' {
+                other_chars[index] = 1;
+            } else if current_char == 'S' {
+                other_chars[index] = -1;
+            }
         }
     }
-    println!("{:?}", total);
-    return total;
+    if other_chars[0] + other_chars[1] == 0 && other_chars[2] + other_chars[3] == 0 {
+        total_found += 1;
+    }
+
+    return total_found;
 }
